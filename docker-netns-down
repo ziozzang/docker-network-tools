@@ -1,0 +1,20 @@
+#!/bin/bash
+# Code by Jioh L. Jung (ziozzang@gmail.com)
+
+NETNS=/var/run/netns
+mkdir -p ${NETNS}
+
+function remove_all() {
+  # Remove purged record.
+  for f in ${NETNS}/*
+  do
+    # Symbolic Link && not exist target
+    if [ -L "$f" ] ; then
+      rm -f $f
+    fi
+  done
+  return
+}
+ 
+remove_all
+
