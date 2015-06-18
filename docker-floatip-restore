@@ -1,0 +1,27 @@
+#!/bin/bash
+STAT_FILE=/var/run/docker-floatip
+
+ETH=$(route -n | grep "^0.0.0.0" | tr ' ' '\n' | tail -1)
+DOCKER_SUBNET=$(ip route | grep docker0 | tr ' ' '\n' | head -1)
+
+cat ${STAT_FILE} | while read line
+do
+    set -- $line
+
+  IPS=${IPS:-"$1"}
+  CID=${CID:-"$2"}
+
+  # Tokenize and Testing Format
+  set -- "$IPS"
+  IFS="/"; declare -a Array=($*)
+
+  # Container IP
+  PIP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${CID})
+  # IP Binding
+  ip addr add ${Array[0]}/${Array[1]} dev ${ETH}
+  # DNAT to Server
+  iptables -t nat -A PREROUTING -d ${Array[0]}/32 -p tcp -m comment --comment IPFW_${Array[0]} -j DNAT --to-destination ${PIP}
+  # NAT Reflect(HairPin)
+  iptables -t nat -A POSTROUTING -s "${DOCKER_SUBNET}" -d ${PIP} -p tcp -m comment --comment "IPFW_${Array[0]}" -j SNAT --to-source ${Array[0]}
+
+done

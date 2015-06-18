@@ -1,0 +1,80 @@
+#!/bin/bash
+STAT_FILE=/var/run/docker-floatip
+function failed()
+{
+  echo "Run Command Like This."
+  echo "> $0 IP/Subnet [container_ID]"
+  echo "> $0 10.254.1.2/24 UUID"
+  exit 1
+}
+
+function valid_ip()
+{
+    local  ip=$1
+    local  stat=1
+
+    if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        OIFS=$IFS
+        IFS='.'
+        ip=($ip)
+        IFS=$OIFS
+        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
+            && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        stat=$?
+    fi
+    return $stat
+}
+
+# Get Params
+if [ -z "$1" ]; then
+  echo "No argument supplied"
+  failed
+fi
+IPS=${IPS:-"$1"}
+CID=${CID:-"$2"}
+
+# Tokenize and Testing Format
+set -- "$IPS"
+IFS="/"; declare -a Array=($*)
+
+if [ -z "${Array[0]}" ]; then
+    echo "IP Address detection failed"
+    failed
+else
+  if valid_ip "${Array[0]}"; then
+    true
+  else
+    echo "IP Format is bad."
+    failed
+  fi
+fi
+
+if [ -z "${Array[1]}" ]
+  then
+    echo "Subnet mask detection failed"
+    failed
+fi
+
+# Base Ethernet NIC
+ETH=$(route -n | grep "^0.0.0.0" | tr ' ' '\n' | tail -1)
+# Container IP
+PIP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${CID})
+# Acquire Docker NAT Subnet
+DOCKER_SUBNET=$(ip route | grep docker0 | tr ' ' '\n' | head -1)
+if valid_ip "${PIP}"; then
+  true
+else
+  echo "Acqusition of docker container's IP is failed."
+  echo "Check Docker Container IP/Name"
+  exit 1
+fi
+
+cat ${STAT_FILE} | grep -v "$1"  > ${STAT_FILE}
+echo "$1 $2" >> ${STAT_FILE}
+
+# IP Binding
+ip addr add ${Array[0]}/${Array[1]} dev ${ETH}
+# DNAT to Server
+iptables -t nat -A PREROUTING -d ${Array[0]}/32 -p tcp -m comment --comment IPFW_${Array[0]} -j DNAT --to-destination ${PIP}
+# NAT Reflect(HairPin)
+iptables -t nat -A POSTROUTING -s "${DOCKER_SUBNET}" -d ${PIP} -p tcp -m comment --comment "IPFW_${Array[0]}" -j SNAT --to-source ${Array[0]}

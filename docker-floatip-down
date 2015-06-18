@@ -1,0 +1,18 @@
+#!/bin/bash
+STAT_FILE=/var/run/docker-floatip
+
+ETH=$(route -n | grep "^0.0.0.0" | tr ' ' '\n' | tail -1)
+
+IPS=`iptables-save | grep "IPFW_" | grep -o '".*"' | grep -o "[\.0-9]*"`
+# get full IP Addr
+echo "${IPS}" | while read line ; do
+  if [ -n "$line" ]; then
+    IPV=`ip addr | grep -o "${line}/[0-9]*"`
+    if [ -n "$IPV" ]; then
+      ip addr del ${IPV} dev ${ETH}
+    fi
+  fi
+done
+
+rm -f ${STAT_FILE}
+iptables-save | grep -v "IPFW_" | iptables-restore
