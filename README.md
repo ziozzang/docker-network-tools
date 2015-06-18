@@ -13,6 +13,8 @@ You can use docker with OVS(Open-V-Switch) and with Linux-bridge with low level 
 
 Usages
 ======
+* All scripts are requied root permission. because scripts are handling iptables, docker process and linux kernel namespace.
+
 * Floating IP support
  * Add : docker-floatip-add [FLOAT_IP_WITH_SUBNET] [CONTAINER_ID]
    * ex) docker-floatip-add 10.1.2.3/24 docker_name
