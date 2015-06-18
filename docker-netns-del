@@ -6,6 +6,6 @@ mkdir -p ${NETNS}
 
 # Acquire docker ids. (don't need -a option. fixed)
 p=`docker inspect --format {{.Config.Hostname}} ${1}`
-if [ -L "$f" ] ; then
+if [ -L "${NETNS}/${p}" ] ; then
   rm -f ${NETNS}/${p}
 fi
