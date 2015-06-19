@@ -1,0 +1,81 @@
+#!/bin/bash
+STAT_FILE=/var/run/docker-ovs-ip
+function failed()
+{
+  echo "Run Command Like This."
+  echo "> $0 bridge_name IP/Subnet [container_ID] [route_ip]"
+  echo "> $0 br0 10.254.1.2/24 UUID 10.254.1.1"
+  exit 1
+}
+
+function valid_ip()
+{
+    local  ip=$1
+    local  stat=1
+
+    if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        OIFS=$IFS
+        IFS='.'
+        ip=($ip)
+        IFS=$OIFS
+        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
+            && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        stat=$?
+    fi
+    return $stat
+}
+
+# Get Params
+if [ -z "$2" ]; then
+  echo "No argument supplied"
+  failed
+fi
+
+BRG=${BRG:-"$1"}
+IPS=${IPS:-"$2"}
+CID=${CID:-"$3"}
+GWS=${GWS:-"$4"}
+
+# Tokenize and Testing Format
+set -- "$IPS"
+IFS="/"; declare -a Array=($*)
+
+if [ -z "${Array[0]}" ]; then
+    echo "IP Address detection failed"
+    failed
+else
+  if valid_ip "${Array[0]}"; then
+    true
+  else
+    echo "IP Format is bad."
+    failed
+  fi
+fi
+
+if [ -z "${Array[1]}" ]
+  then
+    echo "Subnet mask detection failed"
+    failed
+fi
+
+HS=`docker inspect --format {{.Config.Hostname}} ${CID}`
+if [ ! -f "${STAT_FILE}" ]; then
+  touch "${STAT_FILE}"
+fi
+
+cat "${STAT_FILE}" | grep -v "${HS}"  > "${STAT_FILE}"
+echo "$BRG ${Array[0]}/${Array[1]} $HS $GWS" >> "${STAT_FILE}"
+
+hexchars="0123456789abcdef"
+end=$( for i in {1..6} ; do echo -n ${hexchars:$(( $RANDOM % 16 )):1} ; done | sed -e 's/\(..\)/:\1/g' )
+mac="00:60:2a$end"
+ip link add ${HS}a type veth peer name ${HS}b
+brctl addif ${BRG} ${HS}a
+ip link set ${HS}a up
+ip link set ${HS}b netns ${HS}
+ip netns exec ${HS} ip link set dev ${HS}b name eth0
+ip netns exec ${HS} ip link set eth0 address ${mac}
+ip netns exec ${HS} ip link set eth0 up
+ip netns exec ${HS} ip addr add ${Array[0]}/${Array[1]} dev eth0
+ip netns exec ${HS} ip route add default via ${GWS}
+

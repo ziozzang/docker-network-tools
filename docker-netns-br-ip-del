@@ -1,0 +1,30 @@
+#!/bin/bash
+STAT_FILE=/var/run/docker-ovs-ip
+function failed()
+{
+  echo "Run Command Like This."
+  echo "> $0 bridge_name [container_ID]"
+  echo "> $0 br0 UUID"
+  exit 1
+}
+
+# Get Params
+if [ -z "$2" ]; then
+  echo "No argument supplied"
+  failed
+fi
+
+BRG=${BRG:-"$1"}
+CID=${CID:-"$2"}
+
+HS=`docker inspect --format {{.Config.Hostname}} ${CID}`
+if [ ! -f ${STAT_FILE} ]; then
+  touch ${STAT_FILE}
+fi
+cat ${STAT_FILE} | grep -v "${HS}"  > ${STAT_FILE}
+
+ip link set ${HS}a down
+ip netns exec ${HS} ip link set eth0 down
+brctl delif ${BRG} ${HS}a
+ip link del ${HS}a type veth peer name ${HS}b
+
