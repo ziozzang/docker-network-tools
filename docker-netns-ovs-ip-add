@@ -59,12 +59,12 @@ if [ -z "${Array[1]}" ]
 fi
 
 HS=`docker inspect --format {{.Config.Hostname}} ${CID}`
-if [ ! -f ${STAT_FILE} ]; then
-  touch ${STAT_FILE}
+if [ ! -f "${STAT_FILE}" ]; then
+  touch "${STAT_FILE}"
 fi
 
-cat ${STAT_FILE} | grep -v "${HS}"  > ${STAT_FILE}
-echo "$BRG ${Array[0]}/${Array[1]} $HS $GWS" >> ${STAT_FILE}
+cat "${STAT_FILE}" | grep -v "${HS}"  > "${STAT_FILE}"
+echo "$BRG ${Array[0]}/${Array[1]} $HS $GWS" >> "${STAT_FILE}"
 
 hexchars="0123456789abcdef"
 end=$( for i in {1..6} ; do echo -n ${hexchars:$(( $RANDOM % 16 )):1} ; done | sed -e 's/\(..\)/:\1/g' )
