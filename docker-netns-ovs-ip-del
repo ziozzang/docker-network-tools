@@ -22,7 +22,7 @@ if [ ! -f ${STAT_FILE} ]; then
   touch ${STAT_FILE}
 fi
 cat ${STAT_FILE} | grep -v "${HS}"  > ${STAT_FILE}
-
+HS=${HS:0:5}
 ip link set ${HS}-${BRG} down
 ip netns exec ${HS} ip link set eth0 down
 ovs-vsctl del-port ${BRG} ${HS}-${BRG}

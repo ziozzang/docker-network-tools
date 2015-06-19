@@ -66,6 +66,8 @@ fi
 cat "${STAT_FILE}" | grep -v "${HS}"  > "${STAT_FILE}"
 echo "$BRG ${Array[0]}/${Array[1]} $HS $GWS" >> "${STAT_FILE}"
 
+HS=${HS:0:5}
+
 hexchars="0123456789abcdef"
 end=$( for i in {1..6} ; do echo -n ${hexchars:$(( $RANDOM % 16 )):1} ; done | sed -e 's/\(..\)/:\1/g' )
 mac="00:60:2a$end"
