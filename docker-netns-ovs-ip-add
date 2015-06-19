@@ -66,16 +66,16 @@ fi
 cat "${STAT_FILE}" | grep -v "${HS}"  > "${STAT_FILE}"
 echo "$BRG ${Array[0]}/${Array[1]} $HS $GWS" >> "${STAT_FILE}"
 
-HS=${HS:0:5}
+HM=${HS:0:5}
 
 hexchars="0123456789abcdef"
 end=$( for i in {1..6} ; do echo -n ${hexchars:$(( $RANDOM % 16 )):1} ; done | sed -e 's/\(..\)/:\1/g' )
 mac="00:60:2a$end"
-ip link add ${HS}-${BRG} type veth peer name ${HS}.${BRG}
-ovs-vsctl add-port ${BRG} ${HS}-${BRG}
-ip link set ${HS}-${BRG} up
-ip link set ${HS}.${BRG} netns ${HS}
-ip netns exec ${HS} ip link set dev ${HS}.${BRG} name eth0
+ip link add ${HM}-${BRG} type veth peer name ${HM}.${BRG}
+ovs-vsctl add-port ${BRG} ${HM}-${BRG}
+ip link set ${HM}-${BRG} up
+ip link set ${HM}.${BRG} netns ${HS}
+ip netns exec ${HS} ip link set dev ${HM}.${BRG} name eth0
 ip netns exec ${HS} ip link set eth0 address ${mac}
 ip netns exec ${HS} ip link set eth0 up
 ip netns exec ${HS} ip addr add ${Array[0]}/${Array[1]} dev eth0
