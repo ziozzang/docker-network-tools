@@ -23,8 +23,8 @@ if [ ! -f ${STAT_FILE} ]; then
 fi
 cat ${STAT_FILE} | grep -v "${HS}"  > ${STAT_FILE}
 
-ip link set ${HS}a down
+ip link set ${HS}-${BRG} down
 ip netns exec ${HS} ip link set eth0 down
-brctl delif ${BRG} ${HS}a
-ip link del ${HS}a type veth peer name ${HS}b
+brctl delif ${BRG} ${HS}-${BRG}
+ip link del ${HS}-${BRG} type veth peer name ${HS}.${BRG}
 

@@ -69,11 +69,11 @@ echo "$BRG ${Array[0]}/${Array[1]} $HS $GWS" >> "${STAT_FILE}"
 hexchars="0123456789abcdef"
 end=$( for i in {1..6} ; do echo -n ${hexchars:$(( $RANDOM % 16 )):1} ; done | sed -e 's/\(..\)/:\1/g' )
 mac="00:60:2a$end"
-ip link add ${HS}a type veth peer name ${HS}b
-brctl addif ${BRG} ${HS}a
-ip link set ${HS}a up
-ip link set ${HS}b netns ${HS}
-ip netns exec ${HS} ip link set dev ${HS}b name eth0
+ip link add ${HS}-${BRG} type veth peer name ${HS}.${BRG}
+brctl addif ${BRG} ${HS}-${BRG}
+ip link set ${HS}-${BRG} up
+ip link set ${HS}.${BRG} netns ${HS}
+ip netns exec ${HS} ip link set dev ${HS}.${BRG} name eth0
 ip netns exec ${HS} ip link set eth0 address ${mac}
 ip netns exec ${HS} ip link set eth0 up
 ip netns exec ${HS} ip addr add ${Array[0]}/${Array[1]} dev eth0
