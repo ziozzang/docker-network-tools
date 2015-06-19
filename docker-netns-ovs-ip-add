@@ -30,8 +30,11 @@ if [ -z "$2" ]; then
   echo "No argument supplied"
   failed
 fi
+
+BRG=${BRG:-"$1"}
 IPS=${IPS:-"$2"}
 CID=${CID:-"$3"}
+GWS=${GWS:-"$4"}
 
 # Tokenize and Testing Format
 set -- "$IPS"
@@ -55,22 +58,25 @@ if [ -z "${Array[1]}" ]
     failed
 fi
 
-HS=`docker inspect --format {{.Config.Hostname}} ${3}`
+HS=`docker inspect --format {{.Config.Hostname}} ${CID}`
+if [ ! -f ${STAT_FILE} ]; then
+  touch ${STAT_FILE}
+fi
 
 cat ${STAT_FILE} | grep -v "${HS}"  > ${STAT_FILE}
-echo "$1 $2 $HS $4" >> ${STAT_FILE}
+echo "$BRG $IPS $HS $GWS" >> ${STAT_FILE}
 
 hexchars="0123456789abcdef"
 end=$( for i in {1..6} ; do echo -n ${hexchars:$(( $RANDOM % 16 )):1} ; done | sed -e 's/\(..\)/:\1/g' )
 mac="00:60:2a$end"
-
+echo "{HS}"
 ip link add ${HS}a type veth peer name ${HS}b
-ovs-vsctl add-port $1 ${HS}a
+ovs-vsctl add-port ${BRG} ${HS}a
 ip link set ${HS}a up
 ip link set ${HS}b netns ${HS}
 ip netns exec ${HS} ip link set dev ${HS}b name eth0
 ip netns exec ${HS} ip link set eth0 address ${mac}
 ip netns exec ${HS} ip link set eth0 up
-ip netns exec ${HS} ip addr add $2 dev eth0
-ip netns exec ${HS} ip route add default via $4
+ip netns exec ${HS} ip addr add ${IPS} dev eth0
+ip netns exec ${HS} ip route add default via ${GWS}
 
