@@ -64,7 +64,7 @@ if [ ! -f ${STAT_FILE} ]; then
 fi
 
 cat ${STAT_FILE} | grep -v "${HS}"  > ${STAT_FILE}
-echo "$BRG $IPS $HS $GWS" >> ${STAT_FILE}
+echo "$BRG ${Array[0]}/${Array[1]} $HS $GWS" >> ${STAT_FILE}
 
 hexchars="0123456789abcdef"
 end=$( for i in {1..6} ; do echo -n ${hexchars:$(( $RANDOM % 16 )):1} ; done | sed -e 's/\(..\)/:\1/g' )
@@ -77,6 +77,6 @@ ip link set ${HS}b netns ${HS}
 ip netns exec ${HS} ip link set dev ${HS}b name eth0
 ip netns exec ${HS} ip link set eth0 address ${mac}
 ip netns exec ${HS} ip link set eth0 up
-ip netns exec ${HS} ip addr add ${IPS} dev eth0
+ip netns exec ${HS} ip addr add ${Array[0]}/${Array[1]} dev eth0
 ip netns exec ${HS} ip route add default via ${GWS}
 
