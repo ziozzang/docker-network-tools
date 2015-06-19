@@ -3,8 +3,8 @@ STAT_FILE=/var/run/docker-ovs-ip
 function failed()
 {
   echo "Run Command Like This."
-  echo "> $0 bridge_name IP/Subnet [container_ID] [route_ip]"
-  echo "> $0 br0 10.254.1.2/24 UUID 10.254.1.1"
+  echo "> $0 bridge_name IP/Subnet [container_ID] [ethXname] [route_ip]"
+  echo "> $0 br0 10.254.1.2/24 UUID eth1 10.254.1.1"
   exit 1
 }
 
@@ -34,7 +34,8 @@ fi
 BRG=${BRG:-"$1"}
 IPS=${IPS:-"$2"}
 CID=${CID:-"$3"}
-GWS=${GWS:-"$4"}
+NIC=${4:-"eth0"}
+GWS=${5:-""}
 
 # Tokenize and Testing Format
 set -- "$IPS"
@@ -74,9 +75,10 @@ ip link add ${HM}-${BRG} type veth peer name ${HM}.${BRG}
 brctl addif ${BRG} ${HM}-${BRG}
 ip link set ${HM}-${BRG} up
 ip link set ${HM}.${BRG} netns ${HS}
-ip netns exec ${HS} ip link set dev ${HM}.${BRG} name eth0
-ip netns exec ${HS} ip link set eth0 address ${mac}
-ip netns exec ${HS} ip link set eth0 up
-ip netns exec ${HS} ip addr add ${Array[0]}/${Array[1]} dev eth0
-ip netns exec ${HS} ip route add default via ${GWS}
-
+ip netns exec ${HS} ip link set dev ${HM}.${BRG} name ${NIC}
+ip netns exec ${HS} ip link set ${NIC} address ${mac}
+ip netns exec ${HS} ip link set ${NIC} up
+ip netns exec ${HS} ip addr add ${Array[0]}/${Array[1]} dev ${NIC}
+if [ ! -z "$GWS" ]; then
+  ip netns exec ${HS} ip route add default via ${GWS}
+fi
