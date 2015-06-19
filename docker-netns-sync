@@ -1,7 +1,6 @@
 #!/bin/bash
 # Code by Jioh L. Jung (ziozzang@gmail.com)
 
-TIMEOUTS=0.5
 NETNS=/var/run/netns
 mkdir -p ${NETNS}
  
@@ -37,6 +36,6 @@ while true; do
  
   remove_missed
 
-  timeout ${TIMEOUTS} docker events | while read -n1 letter ; do break ; done
+  docker-event-wait
  
 done
