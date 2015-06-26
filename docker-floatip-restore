@@ -4,7 +4,11 @@ STAT_FILE=/var/run/docker-floatip
 ETH=$(route -n | grep "^0.0.0.0" | tr ' ' '\n' | tail -1)
 DOCKER_SUBNET=$(ip route | grep docker0 | tr ' ' '\n' | head -1)
 
-cat ${STAT_FILE} | while read line
+if [ ! -f "${STAT_FILE}" ]; then
+  exit 0
+fi
+
+cat "${STAT_FILE}" | while read line
 do
     set -- $line
 

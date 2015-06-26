@@ -59,7 +59,11 @@ fi
 ETH=$(route -n | grep "^0.0.0.0" | tr ' ' '\n' | tail -1)
 
 
-cat ${STAT_FILE} | grep -v "$1"  > ${STAT_FILE}
+if [ ! -f "${STAT_FILE}" ]; then
+  touch "${STAT_FILE}"
+fi
+
+cat "${STAT_FILE}" | grep -v "$1"  > "${STAT_FILE}"
 
 ip addr del ${Array[0]}/${Array[1]} dev ${ETH}
 iptables-save | grep -v "IPFW_${Array[0]}" | iptables-restore

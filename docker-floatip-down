@@ -14,5 +14,5 @@ echo "${IPS}" | while read line ; do
   fi
 done
 
-rm -f ${STAT_FILE}
+rm -f "${STAT_FILE}"
 iptables-save | grep -v "IPFW_" | iptables-restore

@@ -1,0 +1,30 @@
+#!/bin/bash
+# Shell script by Jio L. Jung(ziozzang@gmail.com)
+
+IPT=/sbin/iptables
+DOCKER_IF=docker0
+PORT_LIST=/etc/docker.ports
+iptables-save | grep -v "PRFW_" | iptables-restore
+
+if [ ! -f "${PORT_LIST}" ]; then
+  echo "# Sample DNAT Ports List" > "${PORT_LIST}"
+  echo "# Column is devided by space." >> "${PORT_LIST}"
+  echo "#protcoll       wan_port        destination_port        docker_container_id" >> "${PORT_LIST}"
+fi
+
+while read line
+do
+  if [ -n  "${line}" ]; then
+    if [ ${line:0:1} != "#" ]; then
+      echo "$line"
+      IFS='   ' read -a array <<< "$line"
+      IP_ADDR=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${array[3]} 2> /dev/null`
+      if [ -n "${IP_ADDR}" ]; then
+        echo ">> DNAT// External: ${array[1]}-> ${array[3]}: '${IP_ADDR}:${array[2]}'"
+        /sbin/iptables -t nat -A DOCKER -m comment --comment "PRFW_" ! -i ${DOCKER_IF} -p ${array[0]} --dport ${array[1]} -j DNAT --to-destination ${IP_ADDR}:${array[2]}
+      else
+        echo ">> ${array[3]} -> No such container"
+      fi      
+    fi
+  fi
+done < "${PORT_LIST}"

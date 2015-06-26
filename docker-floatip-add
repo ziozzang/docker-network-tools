@@ -69,8 +69,12 @@ else
   exit 1
 fi
 
-cat ${STAT_FILE} | grep -v "$1"  > ${STAT_FILE}
-echo "$1 $2" >> ${STAT_FILE}
+if [ ! -f "${STAT_FILE}" ]; then
+  touch "${STAT_FILE}"
+fi
+
+cat "${STAT_FILE}" | grep -v "$1"  > "${STAT_FILE}"
+echo "$1 $2" >> "${STAT_FILE}"
 
 # IP Binding
 ip addr add ${Array[0]}/${Array[1]} dev ${ETH}
