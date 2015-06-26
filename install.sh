@@ -1,5 +1,7 @@
 #!/bin/bash
 CWD=`pwd`
+ln -s ${CWD}/docker-portforw-up /usr/local/bin/docker-portforw-up
+ln -s ${CWD}/docker-portforw-down /usr/local/bin/docker-portforw-down
 ln -s ${CWD}/docker-event-wait /usr/local/bin/docker-event-wait
 ln -s ${CWD}/docker-floatip-add /usr/local/bin/docker-floatip-add
 ln -s ${CWD}/docker-floatip-del /usr/local/bin/docker-floatip-del
