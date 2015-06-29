@@ -1,5 +1,6 @@
 #!/bin/bash
 CWD=`pwd`
+ln -s ${CWD}/docker-get-ip /usr/local/bin/docker-get-ip
 ln -s ${CWD}/docker-portforw-up /usr/local/bin/docker-portforw-up
 ln -s ${CWD}/docker-portforw-down /usr/local/bin/docker-portforw-down
 ln -s ${CWD}/docker-event-wait /usr/local/bin/docker-event-wait

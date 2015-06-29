@@ -1,0 +1,4 @@
+#!/bin/bash
+# Shell script by Jio L. Jung(ziozzang@gmail.com)
+
+docker inspect --format '{{ .NetworkSettings.IPAddress }}' $1 
